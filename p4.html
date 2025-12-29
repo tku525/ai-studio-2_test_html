@@ -1,0 +1,418 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>策略編輯與熱部署 | Strategy Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow: hidden; /* Editor layouts usually fill the viewport */
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .editor-container {
+            height: calc(100vh - 120px);
+        }
+
+        .sidebar-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+        }
+
+        .pulse-emerald {
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .syntax-keyword { color: #c678dd; }
+        .syntax-func { color: #61afef; }
+        .syntax-string { color: #98c379; }
+        .syntax-comment { color: #5c6370; font-style: italic; }
+        .syntax-digit { color: #d19a66; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-14 border-b border-slate-700 bg-slate-900 flex items-center justify-between px-6 z-50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 cursor-pointer" data-goto="p2">
+                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                    <i class="fas fa-terminal text-white"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-white">Quant<span class="text-blue-500">Flow</span></span>
+            </div>
+            <div class="h-6 w-px bg-slate-700 mx-2"></div>
+            <div class="flex items-center gap-2 text-sm text-slate-400">
+                <i class="fa-regular fa-folder-open"></i>
+                <span>Strategies</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                <span class="text-slate-100">trend_following_v3.py</span>
+                <span class="ml-2 px-1.5 py-0.5 bg-slate-800 rounded text-[10px] text-blue-400 border border-blue-900">EDITING</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-emerald-500 flex items-center gap-1.5">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full pulse-emerald"></span>
+                    Live Engine Connected
+                </span>
+                <button data-goto="p1" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Main Nav -->
+        <aside class="w-16 border-r border-slate-800 bg-slate-950 flex flex-col items-center py-6 gap-8">
+            <button data-goto="p2" class="text-slate-500 hover:text-blue-400 transition-colors" title="Dashboard">
+                <i class="fa-solid fa-chart-line text-xl"></i>
+            </button>
+            <button data-goto="p3" class="text-slate-500 hover:text-blue-400 transition-colors" title="Quote Manager">
+                <i class="fa-solid fa-database text-xl"></i>
+            </button>
+            <button data-goto="p4" class="text-blue-500 transition-colors" title="Strategy Editor">
+                <i class="fa-solid fa-code text-xl"></i>
+            </button>
+            <button data-goto="p6" class="text-slate-500 hover:text-blue-400 transition-colors" title="Backtest">
+                <i class="fa-solid fa-vial-virus text-xl"></i>
+            </button>
+            <button data-goto="p5" class="text-slate-500 hover:text-blue-400 transition-colors" title="Portfolio">
+                <i class="fa-solid fa-briefcase text-xl"></i>
+            </button>
+            <div class="mt-auto flex flex-col gap-6 items-center">
+                <button data-goto="p9" class="text-slate-500 hover:text-blue-400 transition-colors">
+                    <i class="fa-solid fa-robot text-xl"></i>
+                </button>
+                <button data-goto="p1" class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                    <img src="https://picsum.photos/seed/user/32/32" alt="avatar">
+                </button>
+            </div>
+        </aside>
+
+        <!-- File Explorer Pane -->
+        <aside class="w-60 bg-slate-900 border-r border-slate-800 flex flex-col">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Explorer</span>
+                <div class="flex gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-slate-500 hover:text-white cursor-pointer text-sm"></i>
+                    <i class="fa-solid fa-folder-plus text-slate-500 hover:text-white cursor-pointer text-sm"></i>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- Project Root -->
+                <div class="text-xs text-slate-300">
+                    <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer group">
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500"></i>
+                        <i class="fa-solid fa-folder-open text-amber-500"></i>
+                        <span>alpha_strategies</span>
+                    </div>
+                    <div class="ml-4">
+                        <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer text-slate-400">
+                            <i class="fa-brands fa-python text-blue-400"></i>
+                            <span>mean_reversion.py</span>
+                        </div>
+                        <div class="flex items-center gap-2 py-1 px-2 bg-slate-800 text-blue-400 rounded cursor-pointer">
+                            <i class="fa-brands fa-python"></i>
+                            <span>trend_following_v3.py</span>
+                        </div>
+                        <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer text-slate-400">
+                            <i class="fa-brands fa-python text-blue-400"></i>
+                            <span>arbitrage_bot.py</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer mt-2 group">
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                        <i class="fa-solid fa-folder text-amber-500"></i>
+                        <span>lib</span>
+                    </div>
+                    <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer group">
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                        <i class="fa-solid fa-folder text-amber-500"></i>
+                        <span>configs</span>
+                    </div>
+                    <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer text-slate-400">
+                        <i class="fa-solid fa-file-lines text-slate-500"></i>
+                        <span>requirements.txt</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Editor Area -->
+        <main class="flex-1 flex flex-col bg-[#1e1e1e]">
+            <!-- Tab bar -->
+            <div class="h-9 flex bg-slate-900">
+                <div class="flex items-center px-4 bg-[#1e1e1e] border-t-2 border-blue-500 text-sm gap-2">
+                    <i class="fa-brands fa-python text-blue-400 text-xs"></i>
+                    <span>trend_following_v3.py</span>
+                    <i class="fa-solid fa-xmark text-[10px] ml-2 text-slate-500 hover:text-white cursor-pointer"></i>
+                </div>
+                <div class="flex items-center px-4 hover:bg-slate-800 text-slate-500 text-sm gap-2 border-r border-slate-800 cursor-pointer">
+                    <i class="fa-brands fa-python text-xs"></i>
+                    <span>mean_reversion.py</span>
+                </div>
+            </div>
+
+            <!-- Editor Surface -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Line Numbers -->
+                <div class="w-12 bg-[#1e1e1e] text-right pr-4 pt-4 text-slate-600 code-font text-sm select-none border-r border-slate-800">
+                    1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20
+                </div>
+                <!-- Code Area -->
+                <div class="flex-1 pt-4 pl-4 overflow-auto code-font text-sm whitespace-pre text-slate-300 leading-relaxed">
+<span class="syntax-keyword">import</span> pandas <span class="syntax-keyword">as</span> pd
+<span class="syntax-keyword">from</span> quant_sdk <span class="syntax-keyword">import</span> Strategy, Indicator
+
+<span class="syntax-keyword">class</span> <span class="syntax-func">TrendFollower</span>(Strategy):
+    <span class="syntax-keyword">def</span> <span class="syntax-func">on_init</span>(<span class="syntax-keyword">self</span>):
+        <span class="syntax-comment"># Initialize moving averages</span>
+        <span class="syntax-keyword">self</span>.fast_ma = Indicator.<span class="syntax-func">EMA</span>(period=<span class="syntax-digit">12</span>)
+        <span class="syntax-keyword">self</span>.slow_ma = Indicator.<span class="syntax-func">EMA</span>(period=<span class="syntax-digit">26</span>)
+        <span class="syntax-keyword">self</span>.<span class="syntax-func">log</span>(<span class="syntax-string">"Strategy Initialized with Hot-Reload"</span>)
+
+    <span class="syntax-keyword">def</span> <span class="syntax-func">on_bar</span>(<span class="syntax-keyword">self</span>, bar):
+        <span class="syntax-keyword">if</span> <span class="syntax-keyword">self</span>.fast_ma > <span class="syntax-keyword">self</span>.slow_ma <span class="syntax-keyword">and</span> <span class="syntax-keyword">not</span> <span class="syntax-keyword">self</span>.position:
+            <span class="syntax-keyword">self</span>.<span class="syntax-func">buy</span>(quantity=<span class="syntax-digit">1.0</span>, price=bar.close)
+            <span class="syntax-keyword">self</span>.<span class="syntax-func">log</span>(<span class="syntax-string">f"Entering Long at {bar.close}"</span>)
+
+        <span class="syntax-keyword">elif</span> <span class="syntax-keyword">self</span>.fast_ma < <span class="syntax-keyword">self</span>.slow_ma <span class="syntax-keyword">and</span> <span class="syntax-keyword">self</span>.position:
+            <span class="syntax-keyword">self</span>.<span class="syntax-func">sell</span>(quantity=<span class="syntax-digit">1.0</span>, price=bar.close)
+            <span class="syntax-keyword">self</span>.<span class="syntax-func">log</span>(<span class="syntax-string">f"Closing Position at {bar.close}"</span>)
+
+    <span class="syntax-keyword">def</span> <span class="syntax-func">on_stop</span>(<span class="syntax-keyword">self</span>):
+        <span class="syntax-keyword">self</span>.<span class="syntax-func">log</span>(<span class="syntax-string">"Hot-Swap: Safe shutdown sequence initiated"</span>)
+                </div>
+            </div>
+
+            <!-- Console / Logs -->
+            <div class="h-48 border-t border-slate-700 bg-slate-900 flex flex-col">
+                <div class="h-8 flex items-center px-4 bg-slate-800 border-b border-slate-700 justify-between">
+                    <div class="flex gap-4">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-blue-400">Terminal</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 cursor-pointer">Debug Console</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 cursor-pointer">Problems (0)</span>
+                    </div>
+                    <div class="flex gap-3 text-slate-500">
+                        <i class="fa-solid fa-ban text-xs hover:text-white cursor-pointer"></i>
+                        <i class="fa-solid fa-chevron-down text-xs hover:text-white cursor-pointer"></i>
+                    </div>
+                </div>
+                <div class="flex-1 p-3 overflow-y-auto code-font text-xs text-slate-400 scrollbar-hide">
+                    <div class="mb-1"><span class="text-emerald-500">[SYSTEM]</span> Hot-Reload listener active on path ./strategies/</div>
+                    <div class="mb-1"><span class="text-slate-500">[14:20:01]</span> Compiling trend_following_v3.py...</div>
+                    <div class="mb-1"><span class="text-blue-400">[14:20:02]</span> <span class="text-white">TrendFollower:</span> Successfully compiled into bytecode.</div>
+                    <div class="mb-1"><span class="text-slate-500">[14:20:02]</span> Injecting update to Live Engine instance ID: #STR-9942</div>
+                    <div class="mb-1 text-emerald-400"><span class="text-emerald-500">[14:20:03]</span> HOT-RELOAD SUCCESS: 0 existing positions preserved. Parameters updated.</div>
+                    <div class="mb-1 animate-pulse"><span class="text-slate-500">> _</span></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Side: Action Panel -->
+        <aside class="w-80 border-l border-slate-800 bg-slate-900 p-4 flex flex-col gap-6 overflow-y-auto">
+            
+            <!-- Quick Actions -->
+            <section>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Live Deployment</h3>
+                <div class="space-y-2">
+                    <button class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20 active:scale-95">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                        一鍵編譯與熱部署
+                    </button>
+                    <button class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-circle-play"></i>
+                        啟動單元測試
+                    </button>
+                </div>
+            </section>
+
+            <!-- Deployment Status -->
+            <section class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wider">Live Status</p>
+                        <h4 class="font-bold text-emerald-500">RUNNING</h4>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                        <div class="w-1.5 h-1.5 bg-emerald-500/30 rounded-full"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <p class="text-slate-500">Instance ID</p>
+                        <p class="font-mono text-slate-300">#EF-920</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Memory</p>
+                        <p class="font-mono text-slate-300">142.4MB</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Up-time</p>
+                        <p class="font-mono text-slate-300">14d 02h</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">CPU</p>
+                        <p class="font-mono text-slate-300">1.2%</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Plugins & Extensions -->
+            <section>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">插件擴充</h3>
+                    <span class="text-[10px] text-blue-500 cursor-pointer hover:underline">Marketplace</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex gap-3 group cursor-pointer hover:border-blue-500/50 transition-colors">
+                        <div class="w-10 h-10 bg-blue-500/10 rounded flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-xs font-bold">Risk Guard Pro</h5>
+                            <p class="text-[10px] text-slate-500">自動回撤止損控制組件</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex gap-3 group cursor-pointer hover:border-emerald-500/50 transition-colors">
+                        <div class="w-10 h-10 bg-emerald-500/10 rounded flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-xs font-bold">AI Signal Refiner</h5>
+                            <p class="text-[10px] text-slate-500">基於 LSTM 的訊號過濾</p>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex gap-3 group cursor-pointer hover:border-amber-500/50 transition-colors">
+                        <div class="w-10 h-10 bg-amber-500/10 rounded flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-xs font-bold">Multi-Channel Alert</h5>
+                            <p class="text-[10px] text-slate-500">Telegram/Discord 同步推播</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Mini Chart -->
+            <section class="mt-auto">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700 relative overflow-hidden">
+                    <img src="https://picsum.photos/seed/chart/300/100" class="absolute bottom-0 left-0 w-full h-12 opacity-20 grayscale" alt="mini chart">
+                    <h4 class="text-xs font-bold text-slate-400 mb-1">Live Alpha Score</h4>
+                    <p class="text-2xl font-bold text-white">1.84 <span class="text-xs text-emerald-400 font-normal ml-1">+0.12</span></p>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="h-6 bg-blue-600 text-white flex items-center justify-between px-3 text-[10px]">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1">
+                <i class="fa-solid fa-code-branch"></i>
+                <span>main*</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Synchronized</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span>Spaces: 4</span>
+            <span>UTF-8</span>
+            <span>Python 3.10.8 (64-bit)</span>
+            <div class="flex items-center gap-1">
+                <i class="fa-solid fa-check-double"></i>
+                <span>Prettier</span>
+            </div>
+            <i class="fa-solid fa-bell"></i>
+        </div>
+    </footer>
+
+    <script>
+        // Simple Interaction logic for prototype navigation
+        document.querySelectorAll('[data-goto]').forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.getAttribute('data-goto');
+                console.log(`Navigating to ${target}`);
+                // In a real environment, this would handle routing
+                // For this prototype, we'll just log it.
+                // alert('Navigating to ' + target);
+            });
+        });
+
+        // Simulating "One-click Compile" feedback
+        const compileBtn = document.querySelector('button.bg-blue-600');
+        if(compileBtn) {
+            compileBtn.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Compiling...';
+                this.disabled = true;
+                this.classList.replace('bg-blue-600', 'bg-slate-700');
+
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fa-solid fa-check"></i> Deployed Successfully';
+                    this.classList.replace('bg-slate-700', 'bg-emerald-600');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        this.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    }, 2000);
+                }, 1500);
+            });
+        }
+    </script>
+
+<script>
+  // Pro Prototype - Static Navigation Shim
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-goto]');
+      if (target) {
+        e.preventDefault();
+        const pageId = target.getAttribute('data-goto');
+        // Navigate to the corresponding HTML file
+        window.location.href = pageId + '.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>
+
+```
