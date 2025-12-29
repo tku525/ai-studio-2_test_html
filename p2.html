@@ -1,0 +1,502 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統總覽儀表板 - AI Trading Nexus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --panel-dark: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-glow {
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .sidebar-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 border-r border-slate-800 bg-slate-900/50 flex flex-col">
+            <div class="p-6">
+                <div class="flex items-center gap-3 text-indigo-500 font-bold text-xl">
+                    <i class="fa-solid fa-microchip text-2xl"></i>
+                    <span>NEXUS AI</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                <button data-goto="p2" class="w-full flex items-center gap-3 px-4 py-3 text-indigo-400 bg-indigo-500/10 rounded-lg transition-all">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="font-medium">系統總覽儀表板</span>
+                </button>
+                <div class="py-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">核心模組</div>
+                <button data-goto="p3" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>數據中心監控</span>
+                </button>
+                <button data-goto="p4" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-code"></i>
+                    <span>策略編輯與部署</span>
+                </button>
+                <button data-goto="p9" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>AI 決策流水線</span>
+                </button>
+                
+                <div class="py-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">帳戶與執行</div>
+                <button data-goto="p5" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>投資組合與同步</span>
+                </button>
+                <button data-goto="p10" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>成交日誌與審計</span>
+                </button>
+
+                <div class="py-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">測試與優化</div>
+                <button data-goto="p6" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-vial"></i>
+                    <span>高擬真回測配置</span>
+                </button>
+                <button data-goto="p8" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-dna"></i>
+                    <span>遺傳最佳化中心</span>
+                </button>
+                <button data-goto="p7" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 sidebar-item rounded-lg transition-all">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>績效深度分析</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800">
+                <button data-goto="p1" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+                    <i class="fa-solid fa-lock text-sm"></i>
+                    <span class="text-sm">安全中心 / 登出</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-950 p-8">
+            
+            <!-- Top Header -->
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold">系統總覽儀表板 <span class="text-xs font-normal text-slate-500 ml-2">v4.2.0-stable</span></h1>
+                    <p class="text-slate-400 text-sm mt-1 tracking-wide uppercase mono">Environment: Production-Mainnet | Cluster: Tokyo-01</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-full text-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-slate-300">系統連線中 (Latency: 12ms)</span>
+                    </div>
+                    <div class="flex items-center gap-3 ml-4 border-l border-slate-800 pl-4">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold">Admin_User</p>
+                            <p class="text-xs text-slate-500">Master Level</p>
+                        </div>
+                        <img src="https://picsum.photos/seed/p2/40/40" class="w-10 h-10 rounded-full ring-2 ring-indigo-500/30" alt="Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Key Stats Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-400 text-sm">總管理淨值 (NAV)</span>
+                        <i class="fa-solid fa-dollar-sign text-indigo-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold mono tracking-tight text-white">$ 1,482,904.52</div>
+                    <div class="mt-2 flex items-center gap-1 text-emerald-400 text-sm">
+                        <i class="fa-solid fa-caret-up"></i>
+                        <span>+2.45% (24h)</span>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-400 text-sm">總敞口部位 (Exposure)</span>
+                        <i class="fa-solid fa-briefcase text-orange-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold mono tracking-tight text-white">$ 842,100.00</div>
+                    <div class="mt-2 flex items-center gap-1 text-slate-400 text-sm">
+                        <span>槓桿倍數: 0.57x</span>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-emerald-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-400 text-sm">當日盈虧 (PnL)</span>
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold mono tracking-tight text-emerald-400">+$ 34,281.10</div>
+                    <div class="mt-2 flex items-center gap-1 text-slate-500 text-sm">
+                        <span>昨日結算: $1,448,623</span>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-indigo-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-400 text-sm">已實現 Alpha 貢獻</span>
+                        <i class="fa-solid fa-bolt-lightning text-yellow-400"></i>
+                    </div>
+                    <div class="text-3xl font-bold mono tracking-tight text-indigo-400">12.4%</div>
+                    <div class="mt-2 flex items-center gap-1 text-slate-400 text-sm">
+                        <span>超額收益率 (年度預估)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                
+                <!-- Equity Curve (Large) -->
+                <div class="lg:col-span-8 glass-panel p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-wave-square text-indigo-400"></i>
+                            實時淨值曲線 (Real-time Equity)
+                        </h3>
+                        <div class="flex bg-slate-800 p-1 rounded-lg text-xs">
+                            <button class="px-3 py-1 bg-slate-700 rounded-md">1D</button>
+                            <button class="px-3 py-1 hover:bg-slate-700 rounded-md">1W</button>
+                            <button class="px-3 py-1 hover:bg-slate-700 rounded-md">1M</button>
+                        </div>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI Mode Status -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-t-cyan-500">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center text-cyan-400 font-bold">A</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">高頻趨勢模式 (Trend)</h4>
+                                    <p class="text-xs text-slate-400">LSTM-based Momentum</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] rounded border border-emerald-500/50">RUNNING</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2 bg-slate-900/50 rounded">信號頻率: <span class="text-cyan-400">1.2s</span></div>
+                            <div class="p-2 bg-slate-900/50 rounded">當前信心: <span class="text-cyan-400">88%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-t-indigo-500">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-400 font-bold">B</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">統計套利模式 (Arb)</h4>
+                                    <p class="text-xs text-slate-400">Multi-Asset Correlation</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] rounded border border-emerald-500/50">RUNNING</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2 bg-slate-900/50 rounded">套利對: <span class="text-indigo-400">14 Active</span></div>
+                            <div class="p-2 bg-slate-900/50 rounded">昨日收益: <span class="text-emerald-400">+0.8%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-t-amber-500 opacity-80">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-400 font-bold">C</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">對沖風控模式 (Hedge)</h4>
+                                    <p class="text-xs text-slate-400">RL-based Dynamic Hedge</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-[10px] rounded border border-amber-500/50">IDLE</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2 bg-slate-900/50 rounded">閾值觸發: <span class="text-slate-400">Waiting</span></div>
+                            <div class="p-2 bg-slate-900/50 rounded">模型負載: <span class="text-slate-400">Low</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Aggregator & Health Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Aggregator Table -->
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                        <h3 class="font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-blue-400"></i>
+                            部位加總器 (Aggregator) 對齊數據
+                        </h3>
+                        <span class="text-[10px] mono text-slate-500">LAST SYNC: 0.5s ago</span>
+                    </div>
+                    <div class="flex-1 overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-900/50 border-b border-slate-800">
+                                <tr>
+                                    <th class="px-6 py-3">標的資產 (Ticker)</th>
+                                    <th class="px-6 py-3 text-right">本地計算 (Local)</th>
+                                    <th class="px-6 py-3 text-right">交易所 (Exch)</th>
+                                    <th class="px-6 py-3 text-right">偏差 (Delta)</th>
+                                    <th class="px-6 py-3 text-center">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr>
+                                    <td class="px-6 py-4 mono font-semibold">BTC-USDT-PERP</td>
+                                    <td class="px-6 py-4 text-right mono">12.450</td>
+                                    <td class="px-6 py-4 text-right mono">12.450</td>
+                                    <td class="px-6 py-4 text-right mono text-slate-400">0.000</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 mono font-semibold">ETH-USDT-PERP</td>
+                                    <td class="px-6 py-4 text-right mono">184.20</td>
+                                    <td class="px-6 py-4 text-right mono">184.22</td>
+                                    <td class="px-6 py-4 text-right mono text-red-400">-0.020</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <i class="fa-solid fa-rotate text-yellow-500 animate-spin-slow"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 mono font-semibold">SOL-USDT-PERP</td>
+                                    <td class="px-6 py-4 text-right mono">-540.00</td>
+                                    <td class="px-6 py-4 text-right mono">-540.00</td>
+                                    <td class="px-6 py-4 text-right mono text-slate-400">0.000</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Health Status & Connectivity -->
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="font-bold flex items-center gap-2 mb-6">
+                        <i class="fa-solid fa-heart-pulse text-rose-500"></i>
+                        系統連線健康度 (System Health)
+                    </h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm">行情引擎 (QuoteEngine - Websocket)</span>
+                                <span class="text-xs text-emerald-400">Optimal (4ms)</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="w-[98%] h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm">交易 API 端點 (Restful / API Key)</span>
+                                <span class="text-xs text-emerald-400">Active</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="w-[100%] h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm">AI 推論服務 (GPU Cluster)</span>
+                                <span class="text-xs text-yellow-400">Heavy Load (82%)</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="w-[82%] h-full bg-yellow-500"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                                <p class="text-xs text-slate-500 mb-1">主機 CPU 負載</p>
+                                <p class="text-xl font-bold mono">24.2%</p>
+                            </div>
+                            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                                <p class="text-xs text-slate-500 mb-1">記憶體佔用</p>
+                                <p class="text-xl font-bold mono">4.8GB / 16GB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Notification Overlay (Floating) -->
+    <div class="fixed bottom-6 right-6 w-80 glass-panel border-l-4 border-l-indigo-500 p-4 rounded-xl shadow-2xl animate-bounce-slow">
+        <div class="flex gap-3">
+            <div class="w-10 h-10 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold">新成交提醒</p>
+                <p class="text-xs text-slate-400">BTC-USDT-PERP Buy @ 68,432.1</p>
+                <p class="text-[10px] text-slate-500 mt-1">2 分鐘前</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data-goto interaction logic
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-goto]');
+            if (target) {
+                const pageId = target.getAttribute('data-goto');
+                console.log('Navigating to Page:', pageId);
+                // In a real prototype, this would trigger the page transition
+                // For this mock, we can simulate loading or show an alert if it's not the same page
+                if(pageId !== 'p2') {
+                    // Normal behavior: alert or change location
+                    // alert('正在前往：' + pageId);
+                }
+            }
+        });
+
+        // Initialize Equity Chart
+        const ctx = document.getElementById('equityChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+        const equityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                datasets: [{
+                    label: 'Net Asset Value',
+                    data: [1420000, 1425000, 1418000, 1435000, 1442000, 1438000, 1455000, 1468000, 1475000, 1482904, 1479000, 1482904],
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#6366f1',
+                    pointHoverBorderColor: '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: '#1e293b',
+                        titleColor: '#94a3b8',
+                        bodyColor: '#f8fafc',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                        ticks: { 
+                            color: '#64748b', 
+                            font: { size: 10 },
+                            callback: value => '$' + (value / 1000000).toFixed(1) + 'M'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simple Animation Logic for "Real-time" feel
+        setInterval(() => {
+            // Update random stat for visual feedback
+            const lastData = equityChart.data.datasets[0].data;
+            const newVal = lastData[lastData.length - 1] + (Math.random() - 0.45) * 500;
+            lastData[lastData.length - 1] = newVal;
+            equityChart.update('none');
+        }, 3000);
+    </script>
+
+    <style>
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 3s linear infinite;
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 4s ease-in-out infinite;
+        }
+    </style>
+
+<script>
+  // Pro Prototype - Static Navigation Shim
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-goto]');
+      if (target) {
+        e.preventDefault();
+        const pageId = target.getAttribute('data-goto');
+        // Navigate to the corresponding HTML file
+        window.location.href = pageId + '.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>
+
+```
