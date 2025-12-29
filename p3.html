@@ -1,0 +1,467 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據中心監控 (QuoteManager) | AlphaTrade Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gap-block {
+            height: 24px;
+            width: 4px;
+            margin: 1px;
+            border-radius: 1px;
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <i class="fas fa-database text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight">AlphaTrade</h1>
+                <p class="text-xs text-slate-500">Infrastructure</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2 mt-4">Core</div>
+            <button data-goto="p2" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all group">
+                <i class="fas fa-chart-line w-5 group-hover:text-indigo-400"></i>
+                <span>系統總覽儀表板</span>
+            </button>
+            <button data-goto="p3" class="w-full flex items-center gap-3 px-3 py-2 bg-indigo-600/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+                <i class="fas fa-server w-5"></i>
+                <span class="font-semibold">數據中心監控</span>
+            </button>
+
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2 mt-6">Execution</div>
+            <button data-goto="p4" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-code w-5"></i>
+                <span>策略編輯與部署</span>
+            </button>
+            <button data-goto="p5" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-wallet w-5"></i>
+                <span>投資組合管理</span>
+            </button>
+
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2 mt-6">Research</div>
+            <button data-goto="p6" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-vial w-5"></i>
+                <span>回測引擎</span>
+            </button>
+            <button data-goto="p7" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-file-contract w-5"></i>
+                <span>績效分析報表</span>
+            </button>
+            <button data-goto="p8" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-dna w-5"></i>
+                <span>遺傳演算法</span>
+            </button>
+
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2 mt-6">AI & Logs</div>
+            <button data-goto="p9" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-brain w-5"></i>
+                <span>AI 流水線監控</span>
+            </button>
+            <button data-goto="p10" class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                <i class="fas fa-history w-5"></i>
+                <span>成交日誌審計</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <button data-goto="p1" class="w-full flex items-center gap-3 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>登出安全中心</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <h2 class="text-xl font-bold">QuoteManager 數據監控</h2>
+                <span class="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full status-pulse"></span>
+                    即時數據流動中 (684 ms Latency)
+                </span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right mr-4">
+                    <p class="text-xs text-slate-500">最後同步時間</p>
+                    <p class="text-sm font-semibold mono italic">2023-10-27 14:45:22</p>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    強制重新同步
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
+            
+            <!-- Data Health Dashboard Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <!-- Tick Data -->
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 bg-sky-500/10 text-sky-400 rounded-lg flex items-center justify-center font-bold">T</div>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Active</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-medium uppercase mb-1">Tick Data</h3>
+                    <div class="flex items-end gap-2">
+                        <span class="text-2xl font-bold mono tracking-tighter text-white">100%</span>
+                        <span class="text-[10px] text-slate-500 pb-1 italic leading-none">Complete</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-sky-500 h-full w-[100%]"></div>
+                    </div>
+                </div>
+
+                <!-- 1m Data -->
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-lg flex items-center justify-center font-bold">1m</div>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Active</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-medium uppercase mb-1">Minute Synced</h3>
+                    <div class="flex items-end gap-2">
+                        <span class="text-2xl font-bold mono tracking-tighter text-white">99.8%</span>
+                        <span class="text-[10px] text-amber-400 pb-1 italic leading-none">2 Gaps Patched</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full w-[99.8%]"></div>
+                    </div>
+                </div>
+
+                <!-- 15m Data -->
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center font-bold">15m</div>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Active</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-medium uppercase mb-1">15m Bar State</h3>
+                    <div class="flex items-end gap-2">
+                        <span class="text-2xl font-bold mono tracking-tighter text-white">100%</span>
+                        <span class="text-[10px] text-slate-500 pb-1 italic leading-none">Consistent</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-violet-500 h-full w-[100%]"></div>
+                    </div>
+                </div>
+
+                <!-- 1H Data -->
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-2xl border-l-4 border-l-rose-500/50">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 bg-rose-500/10 text-rose-400 rounded-lg flex items-center justify-center font-bold">1H</div>
+                        <span class="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Error</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-medium uppercase mb-1">Hourly Synced</h3>
+                    <div class="flex items-end gap-2">
+                        <span class="text-2xl font-bold mono tracking-tighter text-white text-rose-400">92.4%</span>
+                        <span class="text-[10px] text-rose-500 pb-1 italic leading-none font-bold underline cursor-pointer">Re-sync?</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-rose-500 h-full w-[92.4%]"></div>
+                    </div>
+                </div>
+
+                <!-- Daily Data -->
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center justify-center font-bold">D</div>
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Active</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-medium uppercase mb-1">Daily Summary</h3>
+                    <div class="flex items-end gap-2">
+                        <span class="text-2xl font-bold mono tracking-tighter text-white text-emerald-400">OK</span>
+                        <span class="text-[10px] text-slate-500 pb-1 italic leading-none">Verified</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full w-[100%]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Gap Timeline -->
+            <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold">數據連續性視覺化 (BTC-USDT 永續)</h3>
+                        <p class="text-sm text-slate-400">展示過去 24 小時行情數據中的中斷點與自動修復狀態</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs">
+                        <div class="flex items-center gap-2 text-emerald-400 font-semibold"><span class="w-3 h-3 bg-emerald-500 rounded-sm"></span> 原始數據</div>
+                        <div class="flex items-center gap-2 text-amber-400 font-semibold"><span class="w-3 h-3 bg-amber-500 rounded-sm"></span> 已自動補洞</div>
+                        <div class="flex items-center gap-2 text-rose-400 font-semibold"><span class="w-3 h-3 bg-rose-500 rounded-sm"></span> 數據缺失</div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-1 p-4 bg-slate-900/80 rounded-xl border border-slate-700/50">
+                    <!-- Generating a lot of fake status blocks -->
+                    <script>
+                        for(let i=0; i<144; i++) {
+                            let color = "bg-emerald-500/80";
+                            if (i === 45 || i === 46 || i === 89) color = "bg-rose-500";
+                            if (i > 90 && i < 105) color = "bg-amber-500";
+                            if (i > 110 && i < 112) color = "bg-amber-500";
+                            document.write(`<div class="gap-block ${color} flex-grow hover:ring-2 ring-white cursor-help transition-all" title="Period: ${Math.floor(i/6)}:00 Status: ${color.includes('emerald') ? 'Healthy' : color.includes('rose') ? 'Gap Detected' : 'Patched'}"></div>`);
+                        }
+                    </script>
+                </div>
+                <div class="flex justify-between mt-3 text-[10px] text-slate-500 mono px-2 uppercase tracking-widest font-bold">
+                    <span>24H 前</span>
+                    <span>12H 前</span>
+                    <span>現在</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Sync Progress Table -->
+                <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold">分時週期同步進度</h3>
+                        <div class="flex gap-2">
+                            <span class="text-xs px-2 py-1 bg-slate-700 rounded text-slate-300">All Symbols</span>
+                            <span class="text-xs px-2 py-1 bg-indigo-600/20 text-indigo-400 rounded font-bold italic">Top 100 Vol</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-slate-500 border-b border-slate-700 uppercase text-[10px] font-bold tracking-widest">
+                                <tr>
+                                    <th class="pb-3">代號</th>
+                                    <th class="pb-3 text-center">Tick</th>
+                                    <th class="pb-3 text-center">1m</th>
+                                    <th class="pb-3 text-center">1H</th>
+                                    <th class="pb-3 text-center">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr class="hover:bg-white/5 transition-colors">
+                                    <td class="py-4 font-bold mono">BTCUSDT.P</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-amber-400 font-bold">99.8%</td>
+                                    <td class="py-4 text-center"><i class="fas fa-check-circle text-emerald-500"></i></td>
+                                </tr>
+                                <tr class="hover:bg-white/5 transition-colors">
+                                    <td class="py-4 font-bold mono">ETHUSDT.P</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center"><i class="fas fa-check-circle text-emerald-500"></i></td>
+                                </tr>
+                                <tr class="hover:bg-white/5 transition-colors">
+                                    <td class="py-4 font-bold mono">SOLUSDT.P</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-rose-400 font-bold">88.2%</td>
+                                    <td class="py-4 text-center text-rose-400 font-bold">91.4%</td>
+                                    <td class="py-4 text-center"><i class="fas fa-sync text-indigo-500 animate-spin"></i></td>
+                                </tr>
+                                <tr class="hover:bg-white/5 transition-colors">
+                                    <td class="py-4 font-bold mono">AVAXUSDT.P</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center"><i class="fas fa-check-circle text-emerald-500"></i></td>
+                                </tr>
+                                <tr class="hover:bg-white/5 transition-colors">
+                                    <td class="py-4 font-bold mono">LINKUSDT.P</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center text-amber-400 font-bold">99.2%</td>
+                                    <td class="py-4 text-center text-emerald-400 font-bold">100%</td>
+                                    <td class="py-4 text-center"><i class="fas fa-check-circle text-emerald-500"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Factor Value Monitoring -->
+                <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-indigo-300">即時計算因子 (Features)</h3>
+                        <button class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors uppercase font-bold tracking-widest"><i class="fas fa-plus mr-1"></i> Add Factor</button>
+                    </div>
+                    <div class="space-y-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                        <!-- Factor Card 1 -->
+                        <div class="p-4 bg-slate-900/60 border border-slate-700/50 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center border border-emerald-500/20">
+                                    <i class="fas fa-wave-square"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">MA_Cross_20_60</p>
+                                    <p class="text-[10px] text-slate-500 mono">BTCUSDT | 15m Window</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold mono text-emerald-400">+0.842</p>
+                                <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Bullish Cross</p>
+                            </div>
+                        </div>
+
+                        <!-- Factor Card 2 -->
+                        <div class="p-4 bg-slate-900/60 border border-slate-700/50 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center border border-amber-500/20">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">RSI_Dynamic</p>
+                                    <p class="text-[10px] text-slate-500 mono">ETHUSDT | 1H Window</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold mono text-amber-400">72.15</p>
+                                <p class="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Overbought</p>
+                            </div>
+                        </div>
+
+                        <!-- Factor Card 3 -->
+                        <div class="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-indigo-200">AI_Confidence_Score</p>
+                                    <p class="text-[10px] text-indigo-400/70 mono">Ensemble Transformer | 5m</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold mono text-indigo-300">0.91</p>
+                                <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">High Conviction</p>
+                            </div>
+                        </div>
+
+                        <!-- Factor Card 4 -->
+                        <div class="p-4 bg-slate-900/60 border border-slate-700/50 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-full flex items-center justify-center border border-rose-500/20">
+                                    <i class="fas fa-arrows-alt-v"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold">Volatility_Spike</p>
+                                    <p class="text-[10px] text-slate-500 mono">SOLUSDT | Tick Analysis</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold mono text-rose-400">3.8x</p>
+                                <p class="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Abnormal Volume</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Footer Stats -->
+        <footer class="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 text-[10px] uppercase font-bold tracking-widest text-slate-500">
+            <div class="flex items-center gap-6">
+                <span class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    Redis Cache: 2.4 GB / 8 GB
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    PostgreSQL: Healthy
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                    Inflow: 42k ticks/sec
+                </span>
+            </div>
+            <div class="ml-auto text-slate-400">
+                Server Location: AWS-Tokyo-Zone-1A
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Prototype Navigation Controller
+        document.querySelectorAll('[data-goto]').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetPageId = button.getAttribute('data-goto');
+                console.log(`Navigating to: ${targetPageId}`);
+                // In a real app, this would change window.location or route. 
+                // For this prototype, we'll just show an alert or you can swap the HTML.
+                // Assuming the user wants to stay within the same generated framework if possible.
+                alert(`Redirecting to Page ID: ${targetPageId} in the prototype environment.`);
+            });
+        });
+
+        // Simple animation for numbers to make it feel "live"
+        setInterval(() => {
+            const factors = document.querySelectorAll('.mono');
+            factors.forEach(f => {
+                if(Math.random() > 0.8) {
+                    f.classList.add('opacity-50');
+                    setTimeout(() => f.classList.remove('opacity-50'), 100);
+                }
+            });
+        }, 2000);
+    </script>
+
+<script>
+  // Pro Prototype - Static Navigation Shim
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-goto]');
+      if (target) {
+        e.preventDefault();
+        const pageId = target.getAttribute('data-goto');
+        // Navigate to the corresponding HTML file
+        window.location.href = pageId + '.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>
+
+```
