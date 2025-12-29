@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "topic": "使用繁體中文字體\n一、 系統核心架構 (System Infrastructure)\n1. 安全性規範 (Security)：\n    * 帳號、密碼、憑證路徑、憑證密碼、API Keys 絕對禁止寫死在程式碼中。\n二、 數據管理中心 (QuoteManager 層級)\n1. 多週期數據清洗：同步處理 Tick、1分、5分、15分、日線數據。\n2. 斷線自動補洞：偵測行情中斷，連線後自動向 API 請求缺失的歷史 K 線，確保 AI 分析不中斷。\n3. 自定義因子計算：內建技術指標 (MA, RSI, ATR) 與 AI 提取的特徵因子。\n三、 策略開發與編譯 (PowerLanguage 層級)\n1. Web 動態編譯 (Hot-Reload)：在 Web 介面設有代碼編輯區，修改 Python 策略後點選「編譯」，系統不需重啟即可在記憶體中更新邏輯，實時套用於實盤。\n2. 插件式架構：支援「一鍵增加新策略」。您可以隨時擴充第四個、第五個模式。\n四、 三大 AI 獨立模式與部位加總 (Portfolio Trader 層級)\n1. 模式 A/B/C 獨立開關：每個模式具備獨立的權益曲線計算、進出場訊號。\n2. 部位加總器 (Aggregator)：計算三個模式的期望總口數，與 unitradeAPI 實盤自動對齊。\n3. 部位同步 (Position Auto-Sync)：每分鐘校對實盤倉位，發現誤差自動下校正單（對標 MC 的自動部位調整）。\n五、 深度回測與分析系統 (Backtesting & Analysis)\n1. 高擬真回測引擎：\n    * 精細成本設定：每筆回測必須扣除手續費、期交稅。\n    * 滑點模擬 (Slippage)：可設定每個 Tick 的滑點損失，真實還原交易現場。\n2. 績效報告表：產出包含 勝率、獲利因子、最大回撤 (MDD)、連虧次數、夏普比率 的專業報表。\n3. 回測視覺化：在 Web 介面顯示回測後的資金曲線圖。\n六、 最佳化引擎 (Optimization 層級)\n1. 遺傳演算法 (Genetic Algorithm)：由 AI (Gemini) 執行參數尋優，自動找出過去 30 天內表現最好的參數組合（如 MA 長度、止損點數）。\n2. 樣本外測試 (Walk-Forward)：自動分割數據，確保找到的參數在未來是有用的，而非過度擬合。\n七、 AI 決策流水線 (AI Decision Pipeline)\n* 分析頻率：每 5 分鐘 觸發一次（由 Llama-405B 總指揮）。\n* 五階段分工：\n    * Groq (快看行情) ➔ GPT-4o (新聞情緒) ➔ Gemini (回測與風控分析) ➔ Llama-405B (最終決策下單)。\n八、 Web 介面與自動化部署 (Ops & UI)\n1. 全功能控制台：包含 模式開關、策略編輯器、回測啟動鈕、績效報表、成交日誌。\n",
+  "createdAt": "2025-12-29T14:00:15.820Z",
+  "pages": [
+    {
+      "id": "p1",
+      "title": "安全登入與憑證中心 (Security & Auth)",
+      "description": "系統入口，強化安全性規範。提供加密憑證路徑設定與 API Keys 匯入介面，確保敏感資訊不硬編碼於程式中。包含雙重驗證 (2FA) 以符合金融級安全標準。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2"
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "系統總覽儀表板 (Dashboard)",
+      "description": "實時顯示當前總部位、淨值曲線、三個 AI 模式 (A/B/C) 的運行狀態。包含部位加總器 (Aggregator) 的即時對齊數據與系統連線健康度（行情、API、AI 服務）。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p3",
+        "p4",
+        "p5",
+        "p6",
+        "p9",
+        "p10"
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "數據中心監控 (QuoteManager)",
+      "description": "數據清洗與補洞狀態監控。顯示 Tick 到日線的多週期同步進度。視覺化呈現行情中斷點及自動補洞後的完整度，並列出當前自定義因子 (MA, RSI, AI 特徵) 的計算數值。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2"
+      ]
+    },
+    {
+      "id": "p4",
+      "title": "策略編輯與熱部署 (Strategy Editor)",
+      "description": "基於 Web 的 Python 代碼編輯區。支援 Hot-Reload 動態編譯功能，右側設有「一鍵編譯」與「插件擴充」按鈕，可在不重啟系統情況下更新策略邏輯並套用至實盤。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2",
+        "p5"
+      ]
+    },
+    {
+      "id": "p5",
+      "title": "投資組合與部位同步 (Portfolio & Sync)",
+      "description": "獨立管理模式 A、B、C。包含各自的開關、權益曲線與信號日誌。下方設有「部位同步器 (Auto-Sync)」，每分鐘顯示實盤與理論倉位的誤差值及自動校正單進度。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2",
+        "p9",
+        "p10"
+      ]
+    },
+    {
+      "id": "p6",
+      "title": "高擬真回測配置 (Backtest Engine)",
+      "description": "設定回測參數，包括手續費、稅金、以及每個 Tick 的滑點 (Slippage) 模擬。可選擇歷史數據區間，並勾選是否包含 AI 因子參與回測。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p7"
+      ]
+    },
+    {
+      "id": "p7",
+      "title": "績效深度分析報表 (Performance Report)",
+      "description": "視覺化呈現回測結果。包含獲利因子、最大回撤 (MDD)、勝率、夏普比率。提供資金曲線圖、交易點位圖及連虧次數統計，支持與基準指數對比。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p6",
+        "p8"
+      ]
+    },
+    {
+      "id": "p8",
+      "title": "遺傳演算法最佳化 (Optimization Hub)",
+      "description": "AI (Gemini) 參數尋優介面。可設定參數搜索範圍，執行遺傳演算法並進行樣本外 (Walk-Forward) 測試驗證。結果可直接「套用至策略」送回編譯區。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p4",
+        "p7"
+      ]
+    },
+    {
+      "id": "p9",
+      "title": "AI 決策流水線監控 (Decision Pipeline)",
+      "description": "視覺化展示每 5 分鐘一次的 AI 決策流程：Groq 行情掃描 -> GPT-4o 情緒分析 -> Gemini 風控分析 -> Llama-405B 最終下單指令的完整日誌與權重分配。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2",
+        "p10"
+      ]
+    },
+    {
+      "id": "p10",
+      "title": "成交日誌與審計 (Trade Log & Audit)",
+      "description": "完整的實盤交易日誌。記錄每筆委託單的來源模式、執行價格、同步校正詳情及 AI 決策摘要。提供導出 CSV 功能供後續稽核。",
+      "status": "completed",
+      "suggestedNavigation": [
+        "p2",
+        "p5"
+      ]
+    }
+  ]
+}
