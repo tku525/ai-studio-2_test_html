@@ -1,0 +1,488 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 決策流水線監控 | Decision Pipeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            groq: '#f55036',
+                            gpt4: '#10a37f',
+                            gemini: '#4285f4',
+                            llama: '#0668E1',
+                            dark: '#0f172a',
+                            panel: '#1e293b'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'flow': 'flowLine 2s linear infinite',
+                    },
+                    keyframes: {
+                        flowLine: {
+                            '0%': { strokeDashoffset: '100' },
+                            '100%': { strokeDashoffset: '0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes flowLine {
+            to { stroke-dashoffset: -20; }
+        }
+        .flow-path {
+            stroke-dasharray: 5;
+            animation: flowLine 1s linear infinite;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-brand-dark text-slate-200 font-sans selection:bg-blue-500/30 overflow-hidden">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 border-r border-slate-800 flex flex-col bg-brand-dark shrink-0">
+            <div class="p-6">
+                <div class="flex items-center gap-3 text-blue-400 font-bold text-xl mb-8">
+                    <i class="fas fa-brain-circuit text-2xl"></i>
+                    <span>QuantOS AI</span>
+                </div>
+                <nav class="space-y-1">
+                    <button data-goto="p2" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                        <i class="fas fa-chart-line w-5"></i> 系統總覽
+                    </button>
+                    <button data-goto="p3" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                        <i class="fas fa-database w-5"></i> 數據中心
+                    </button>
+                    <button data-goto="p4" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                        <i class="fas fa-code w-5"></i> 策略編輯
+                    </button>
+                    <button data-goto="p9" class="w-full flex items-center gap-3 px-4 py-3 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg transition-all">
+                        <i class="fas fa-microchip w-5"></i> 決策流水線
+                    </button>
+                    <button data-goto="p10" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                        <i class="fas fa-receipt w-5"></i> 成交日誌
+                    </button>
+                    <div class="pt-4 mt-4 border-t border-slate-800 space-y-1">
+                        <button data-goto="p5" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 text-sm">
+                            <i class="fas fa-wallet w-5"></i> 投資組合
+                        </button>
+                        <button data-goto="p1" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 text-sm">
+                            <i class="fas fa-shield-halved w-5"></i> 安全中心
+                        </button>
+                    </div>
+                </nav>
+            </div>
+            <div class="mt-auto p-4 bg-slate-900/50">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-xs text-slate-400">系統連線中: 24ms</span>
+                </div>
+                <div class="text-[10px] text-slate-600 uppercase tracking-widest">v4.2.0-stable</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <!-- Header -->
+            <header class="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-brand-dark/50 backdrop-blur-sm z-10">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-lg font-semibold flex items-center gap-2">
+                        <span class="text-slate-500">監控 /</span>
+                        <span>AI 決策流水線</span>
+                    </h1>
+                    <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded border border-blue-500/20 uppercase tracking-tighter">Live Monitor</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500 uppercase tracking-widest">Next Execution</div>
+                        <div class="text-lg font-mono font-bold text-emerald-400" id="timer">04:52</div>
+                    </div>
+                    <button class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        立即手動觸發
+                    </button>
+                </div>
+            </header>
+
+            <!-- Pipeline Workspace -->
+            <div class="flex-1 overflow-y-auto p-8 space-y-8">
+                
+                <!-- Visual Pipeline Flow -->
+                <section class="relative">
+                    <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-800 -translate-y-1/2 z-0 rounded-full"></div>
+                    
+                    <div class="grid grid-cols-4 gap-8 relative z-10">
+                        <!-- Step 1: Groq -->
+                        <div class="flex flex-col items-center group">
+                            <div class="w-20 h-20 rounded-2xl bg-brand-groq/10 border-2 border-brand-groq flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,80,54,0.2)] group-hover:shadow-[0_0_30px_rgba(245,80,54,0.4)] transition-all relative">
+                                <i class="fas fa-bolt-lightning text-3xl text-brand-groq"></i>
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-brand-dark flex items-center justify-center">
+                                    <i class="fas fa-check text-[8px] text-white"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="font-bold text-brand-groq">Groq LPU</h3>
+                                <p class="text-xs text-slate-500 mb-2">行情掃描與預處理</p>
+                                <div class="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400 font-mono">Lat: 18ms</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: GPT-4o -->
+                        <div class="flex flex-col items-center group">
+                            <div class="w-20 h-20 rounded-2xl bg-brand-gpt4/10 border-2 border-brand-gpt4 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(16,163,127,0.2)] group-hover:shadow-[0_0_30px_rgba(16,163,127,0.4)] transition-all relative">
+                                <i class="fas fa-comment-dots text-3xl text-brand-gpt4"></i>
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-brand-dark flex items-center justify-center">
+                                    <i class="fas fa-check text-[8px] text-white"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="font-bold text-brand-gpt4">GPT-4o</h3>
+                                <p class="text-xs text-slate-500 mb-2">情緒分析 & 事件解讀</p>
+                                <div class="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400 font-mono">Sentiment: +0.68</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Gemini Pro -->
+                        <div class="flex flex-col items-center group">
+                            <div class="w-20 h-20 rounded-2xl bg-brand-gemini/10 border-2 border-brand-gemini flex items-center justify-center mb-4 animate-pulse-fast shadow-[0_0_25px_rgba(66,133,244,0.3)] relative">
+                                <i class="fas fa-shield-heart text-3xl text-brand-gemini"></i>
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full border-4 border-brand-dark flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="font-bold text-brand-gemini">Gemini 1.5 Pro</h3>
+                                <p class="text-xs text-slate-500 mb-2">風控矩陣與曝險評估</p>
+                                <div class="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-400 font-mono italic">Processing...</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Llama-405B -->
+                        <div class="flex flex-col items-center group opacity-50 grayscale">
+                            <div class="w-20 h-20 rounded-2xl bg-brand-llama/10 border-2 border-slate-700 flex items-center justify-center mb-4 transition-all">
+                                <i class="fas fa-gavel text-3xl text-slate-500"></i>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="font-bold text-slate-500">Llama-405B</h3>
+                                <p class="text-xs text-slate-600 mb-2">最終下單指令生成</p>
+                                <div class="px-2 py-1 bg-slate-800 rounded text-[10px] text-slate-600 font-mono">Waiting...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Data Analysis Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Weight Distribution -->
+                    <div class="lg:col-span-1 glass-panel rounded-2xl p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold">權重分配 (Weighting)</h3>
+                            <i class="fas fa-circle-info text-slate-500 text-xs"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="relative pt-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-brand-groq">行情強度</span>
+                                    <span class="text-xs font-semibold text-slate-400">15%</span>
+                                </div>
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-slate-800">
+                                    <div style="width:15%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-brand-groq"></div>
+                                </div>
+                            </div>
+                            <div class="relative pt-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-brand-gpt4">情緒訊號</span>
+                                    <span class="text-xs font-semibold text-slate-400">35%</span>
+                                </div>
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-slate-800">
+                                    <div style="width:35%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-brand-gpt4"></div>
+                                </div>
+                            </div>
+                            <div class="relative pt-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-brand-gemini">風險評分</span>
+                                    <span class="text-xs font-semibold text-slate-400">40%</span>
+                                </div>
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-slate-800">
+                                    <div style="width:40%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-brand-gemini"></div>
+                                </div>
+                            </div>
+                            <div class="relative pt-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-semibold text-brand-llama">策略共振</span>
+                                    <span class="text-xs font-semibold text-slate-400">10%</span>
+                                </div>
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-slate-800">
+                                    <div style="width:10%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-brand-llama"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <div class="text-[10px] text-slate-500 uppercase mb-1">當前決策偏向</div>
+                            <div class="text-xl font-bold text-amber-500 flex items-center gap-2">
+                                <i class="fas fa-hand-holding-dollar"></i>
+                                謹慎看多 (Bullish-Wait)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Stream Logs -->
+                    <div class="lg:col-span-2 glass-panel rounded-2xl flex flex-col">
+                        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-bold flex items-center gap-2">
+                                <i class="fas fa-terminal text-blue-400"></i>
+                                即時決策日誌 (Live Logs)
+                            </h3>
+                            <div class="flex gap-2">
+                                <button class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400 hover:text-white">Clear</button>
+                                <button class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400 hover:text-white">Export</button>
+                            </div>
+                        </div>
+                        <div class="p-4 font-mono text-xs overflow-y-auto max-h-[320px] space-y-2">
+                            <div class="flex gap-3">
+                                <span class="text-slate-500">[14:20:01]</span>
+                                <span class="text-brand-groq">[GROQ]</span>
+                                <span class="text-slate-300">掃描完成: BTC/USDT 發現 RSI 背離訊號於 15m K線。</span>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-slate-500">[14:20:05]</span>
+                                <span class="text-brand-gpt4">[GPT-4]</span>
+                                <span class="text-slate-300">新聞抓取: Fed 委員發表談話，市場預期偏向鷹派，情緒轉為中性。</span>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-slate-500">[14:20:12]</span>
+                                <span class="text-brand-gemini">[GEMINI]</span>
+                                <span class="text-brand-gemini">風險警報: 當前波幅 (ATR) 超過日均 20%，縮減部位預期 15%。</span>
+                            </div>
+                            <div class="flex gap-3 animate-pulse">
+                                <span class="text-slate-500">[14:20:18]</span>
+                                <span class="text-blue-400">[SYSTEM]</span>
+                                <span class="text-white font-bold italic">>>> 正在請求 Llama-405B 生成執行指令...</span>
+                            </div>
+                            <div class="flex gap-3 opacity-40">
+                                <span class="text-slate-500">[14:15:00]</span>
+                                <span class="text-brand-llama">[LLAMA]</span>
+                                <span class="text-slate-300">指令下達: BUY BTC 0.25 LIMIT @ 64500.2 (Result: FILLED)</span>
+                            </div>
+                            <div class="flex gap-3 opacity-40">
+                                <span class="text-slate-500">[14:10:00]</span>
+                                <span class="text-brand-llama">[LLAMA]</span>
+                                <span class="text-slate-300">指令下達: NO_ACTION - 風險閾值未達標。</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <section class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="p-6 border-b border-slate-800">
+                        <h3 class="font-bold">歷史決策回顧 (5-Minute Intervals)</h3>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-800/50 text-[10px] text-slate-500 uppercase tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4">時間 (UTC+8)</th>
+                                <th class="px-6 py-4">決策模型</th>
+                                <th class="px-6 py-4">綜合情緒</th>
+                                <th class="px-6 py-4">風險等級</th>
+                                <th class="px-6 py-4 text-right">執行動作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 text-sm font-mono text-slate-400">14:15:00</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex -space-x-2">
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-groq flex items-center justify-center text-[8px]"><i class="fas fa-bolt"></i></div>
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-gpt4 flex items-center justify-center text-[8px]"><i class="fas fa-brain"></i></div>
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-gemini flex items-center justify-center text-[8px]"><i class="fas fa-shield"></i></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs">+0.42 (Bullish)</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded text-xs">Medium</span>
+                                </td>
+                                <td class="px-6 py-4 text-right text-blue-400 font-bold text-sm">BUY BTC</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 text-sm font-mono text-slate-400">14:10:00</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex -space-x-2">
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-groq flex items-center justify-center text-[8px]"><i class="fas fa-bolt"></i></div>
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-gpt4 flex items-center justify-center text-[8px]"><i class="fas fa-brain"></i></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-slate-400 bg-slate-400/10 px-2 py-0.5 rounded text-xs">-0.05 (Neutral)</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs">Low</span>
+                                </td>
+                                <td class="px-6 py-4 text-right text-slate-500 font-bold text-sm">HOLD</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 text-sm font-mono text-slate-400">14:05:00</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex -space-x-2">
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-groq flex items-center justify-center text-[8px]"><i class="fas fa-bolt"></i></div>
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-gpt4 flex items-center justify-center text-[8px]"><i class="fas fa-brain"></i></div>
+                                        <div class="w-6 h-6 rounded-full border border-slate-900 bg-brand-llama flex items-center justify-center text-[8px]"><i class="fas fa-gavel"></i></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded text-xs">-0.72 (Bearish)</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded text-xs">High Risk</span>
+                                </td>
+                                <td class="px-6 py-4 text-right text-rose-500 font-bold text-sm">SELL ETH</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </main>
+
+        <!-- Model Specs (Right Panel) -->
+        <aside class="w-80 border-l border-slate-800 bg-brand-dark/30 hidden xl:flex flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Model Health</h3>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Groq Mixtral-8x7b</span>
+                        <span class="text-emerald-400 font-mono">100% Online</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">GPT-4o (Vision Enabled)</span>
+                        <span class="text-emerald-400 font-mono">100% Online</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-emerald-500 rounded"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Llama-3-405B-Instruct</span>
+                        <span class="text-amber-400 font-mono">High Latency</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="h-1 flex-1 bg-amber-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-amber-500 rounded"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded"></div>
+                        <div class="h-1 flex-1 bg-slate-700 rounded"></div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-widest mb-4">系統資源消耗</div>
+                    <div class="relative h-32 w-full flex items-end justify-between px-2">
+                        <div class="w-4 bg-blue-500/30 h-[40%] rounded-t"></div>
+                        <div class="w-4 bg-blue-500/50 h-[65%] rounded-t"></div>
+                        <div class="w-4 bg-blue-500/40 h-[50%] rounded-t"></div>
+                        <div class="w-4 bg-blue-500/80 h-[90%] rounded-t"></div>
+                        <div class="w-4 bg-blue-500/60 h-[70%] rounded-t"></div>
+                        <div class="w-4 bg-blue-600 h-[85%] rounded-t"></div>
+                    </div>
+                    <div class="flex justify-between text-[8px] text-slate-600 mt-2 px-1">
+                        <span>14:00</span>
+                        <span>14:10</span>
+                        <span>14:20</span>
+                    </div>
+                </div>
+
+                <div class="bg-blue-600/10 border border-blue-500/20 p-4 rounded-xl mt-6">
+                    <div class="text-blue-400 text-xs font-bold mb-2 flex items-center gap-2">
+                        <i class="fas fa-robot"></i>
+                        AI 指令優化建議
+                    </div>
+                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                        檢測到 Gemini 風控模組當前對於 L2 代幣權重過高，建議手動調整風控因子以應對即將到來的市場波動。
+                    </p>
+                    <button class="mt-3 w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] rounded transition-colors">
+                        應用優化方案
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Data-goto navigation logic
+        document.querySelectorAll('[data-goto]').forEach(element => {
+            element.addEventListener('click', () => {
+                const target = element.getAttribute('data-goto');
+                console.log(`Navigating to ${target}`);
+                // In a real environment, this would use a router or window.location
+                // For this prototype, we just alert the target.
+                alert(`Prototype Navigation: Moving to Page ${target}`);
+            });
+        });
+
+        // Simple timer simulation
+        let timeLeft = 292; // 4:52
+        const timerEl = document.getElementById('timer');
+        setInterval(() => {
+            if (timeLeft <= 0) timeLeft = 300;
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+    </script>
+
+<script>
+  // Pro Prototype - Static Navigation Shim
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-goto]');
+      if (target) {
+        e.preventDefault();
+        const pageId = target.getAttribute('data-goto');
+        // Navigate to the corresponding HTML file
+        window.location.href = pageId + '.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>
+
+```
