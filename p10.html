@@ -1,0 +1,613 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成交日誌與審計 (Trade Log & Audit) | AlphaQuant AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .table-row-hover:hover {
+            background-color: rgba(56, 189, 248, 0.05);
+        }
+
+        /* Tooltip-like behavior */
+        .audit-info:hover .audit-popup {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 border-r border-slate-800 bg-slate-900 hidden lg:flex flex-col">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-10 cursor-pointer" data-goto="p2">
+                <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-bolt text-white"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight">AlphaQuant</span>
+            </div>
+
+            <nav class="space-y-1">
+                <button data-goto="p2" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>儀表板</span>
+                </button>
+                <button data-goto="p5" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                    <i class="fas fa-briefcase w-5"></i>
+                    <span>投資組合</span>
+                </button>
+                <button data-goto="p9" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                    <i class="fas fa-microchip w-5"></i>
+                    <span>AI 決策監控</span>
+                </button>
+                <button data-goto="p10" class="w-full flex items-center gap-3 px-4 py-3 bg-sky-500/10 text-sky-400 rounded-xl transition-all">
+                    <i class="fas fa-file-invoice-dollar w-5"></i>
+                    <span>成交日誌</span>
+                </button>
+                <div class="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">系統審計</div>
+                <button data-goto="p3" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                    <i class="fas fa-database w-5"></i>
+                    <span>數據中心</span>
+                </button>
+                <button data-goto="p1" class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                    <i class="fas fa-shield-halved w-5"></i>
+                    <span>安全中心</span>
+                </button>
+            </nav>
+        </div>
+        
+        <div class="mt-auto p-6 border-t border-slate-800">
+            <div class="flex items-center gap-3 px-2">
+                <img src="https://picsum.photos/seed/admin/40/40" class="w-10 h-10 rounded-full border border-slate-700" alt="User">
+                <div class="overflow-hidden">
+                    <p class="text-sm font-medium truncate">Senior Auditor</p>
+                    <p class="text-xs text-slate-500 truncate">ID: AQ-9921</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-950">
+        <!-- Header -->
+        <header class="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold">成交日誌與審計 <span class="text-slate-500 font-normal text-sm ml-2">Trade Log & Audit</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 gap-2 border border-slate-700">
+                    <span class="status-dot bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs text-slate-300 font-medium uppercase tracking-wider">Live Syncing</span>
+                </div>
+                <button class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                    <i class="fas fa-file-csv"></i>
+                    導出 CSV
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-panel rounded-2xl p-6">
+                    <p class="text-slate-400 text-sm mb-1">今日成交量</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-2xl font-bold mono">$1,248,502</h3>
+                        <span class="text-emerald-400 text-xs font-bold mb-1"><i class="fas fa-arrow-up mr-1"></i>12%</span>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6">
+                    <p class="text-slate-400 text-sm mb-1">成交筆數 (24h)</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-2xl font-bold mono">482</h3>
+                        <span class="text-slate-400 text-xs mb-1">Avg 20.1/hr</span>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-emerald-500">
+                    <p class="text-slate-400 text-sm mb-1">同步成功率</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-2xl font-bold mono">99.98%</h3>
+                        <span class="text-emerald-400 text-xs mb-1">Excellent</span>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl p-6">
+                    <p class="text-slate-400 text-sm mb-1">平均執行滑點</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-2xl font-bold mono">0.021%</h3>
+                        <span class="text-rose-400 text-xs mb-1"><i class="fas fa-info-circle mr-1"></i>Low Impact</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-[200px] relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input type="text" placeholder="搜尋標的、委託單 ID 或策略..." class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/50">
+                </div>
+                <select class="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none">
+                    <option>所有策略 (All Models)</option>
+                    <option>RL-Alpha-X1</option>
+                    <option>Momentum-Burst</option>
+                    <option>Mean-Reversion-HFT</option>
+                </select>
+                <select class="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none">
+                    <option>所有標的</option>
+                    <option>BTC/USDT</option>
+                    <option>ETH/USDT</option>
+                    <option>TSLA</option>
+                    <option>NVDA</option>
+                </select>
+                <div class="flex bg-slate-950 border border-slate-700 rounded-lg p-1">
+                    <button class="px-4 py-1 text-xs font-bold rounded-md bg-slate-800 text-white">今日</button>
+                    <button class="px-4 py-1 text-xs font-bold rounded-md text-slate-500 hover:text-slate-300">本週</button>
+                    <button class="px-4 py-1 text-xs font-bold rounded-md text-slate-500 hover:text-slate-300">自訂</button>
+                </div>
+            </div>
+
+            <!-- Trade Table -->
+            <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-800/50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                <th class="px-6 py-4">成交時間 / ID</th>
+                                <th class="px-6 py-4">交易對 / 方向</th>
+                                <th class="px-6 py-4">成交價格 / 數量</th>
+                                <th class="px-6 py-4">來源模式</th>
+                                <th class="px-6 py-4">同步校正 (Slippage)</th>
+                                <th class="px-6 py-4">AI 決策摘要</th>
+                                <th class="px-6 py-4 text-center">狀態</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-sm">
+                            <!-- Row 1 -->
+                            <tr class="table-row-hover transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono">2023-10-27 14:22:05</div>
+                                    <div class="text-slate-500 text-[10px] mt-1 uppercase mono">TX-90821-AF2</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-100">BTC / USDT</div>
+                                    <div class="text-emerald-500 font-bold text-xs uppercase"><i class="fas fa-caret-up mr-1"></i>Long / Buy</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono font-medium">34,512.20</div>
+                                    <div class="text-slate-400 text-xs mono">0.245 BTC</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[10px] border border-slate-700">RL-ALPHA-V2</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1 bg-slate-800 rounded overflow-hidden">
+                                            <div class="bg-emerald-500 h-full w-[10%]"></div>
+                                        </div>
+                                        <span class="text-[11px] text-emerald-400 mono">0.005%</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 mt-1">Sync Latency: 42ms</div>
+                                </td>
+                                <td class="px-6 py-4 max-w-xs">
+                                    <div class="bg-slate-950/50 p-2 rounded text-[11px] text-slate-400 border border-slate-800 line-clamp-2 italic">
+                                        "Detected breakout pattern with 84% confidence. Sentiment scoring positive across top 5 aggregators."
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-500 hover:text-white transition-colors" title="審計詳情">
+                                        <i class="fas fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 2 -->
+                            <tr class="table-row-hover transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono">2023-10-27 14:18:31</div>
+                                    <div class="text-slate-500 text-[10px] mt-1 uppercase mono">TX-90819-BH4</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-100">NVDA / USD</div>
+                                    <div class="text-rose-500 font-bold text-xs uppercase"><i class="fas fa-caret-down mr-1"></i>Short / Sell</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono font-medium">412.55</div>
+                                    <div class="text-slate-400 text-xs mono">50 Shares</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[10px] border border-slate-700">Momentum-X</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1 bg-slate-800 rounded overflow-hidden">
+                                            <div class="bg-amber-500 h-full w-[65%]"></div>
+                                        </div>
+                                        <span class="text-[11px] text-amber-400 mono">0.042%</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 mt-1">Sync Latency: 128ms</div>
+                                </td>
+                                <td class="px-6 py-4 max-w-xs">
+                                    <div class="bg-slate-950/50 p-2 rounded text-[11px] text-slate-400 border border-slate-800 line-clamp-2 italic">
+                                        "Volatility spike triggered mean-reversion threshold. Hedging portfolio exposure by 5%."
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-500 hover:text-white transition-colors">
+                                        <i class="fas fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3 (Alert/Warning Status) -->
+                            <tr class="table-row-hover transition-colors group bg-rose-500/5">
+                                <td class="px-6 py-4 whitespace-nowrap border-l-2 border-rose-500">
+                                    <div class="text-slate-200 mono">2023-10-27 13:55:01</div>
+                                    <div class="text-slate-500 text-[10px] mt-1 uppercase mono">TX-90772-ER1</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-100">ETH / USDT</div>
+                                    <div class="text-emerald-500 font-bold text-xs uppercase"><i class="fas fa-caret-up mr-1"></i>Long / Buy</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono font-medium">1,844.12</div>
+                                    <div class="text-slate-400 text-xs mono">12.00 ETH</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[10px] border border-slate-700">Arbitrage-Bot</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2 text-rose-400">
+                                        <i class="fas fa-triangle-exclamation text-xs"></i>
+                                        <span class="text-[11px] mono">0.185%</span>
+                                    </div>
+                                    <div class="text-[10px] text-rose-400/70 mt-1 font-bold italic">Manual Override Required</div>
+                                </td>
+                                <td class="px-6 py-4 max-w-xs">
+                                    <div class="bg-rose-950/20 p-2 rounded text-[11px] text-rose-200 border border-rose-900/30 line-clamp-2">
+                                        "CRITICAL: Exchange API returned stale price. Strategy corrected position but slippage exceeded threshold."
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-500 text-white animate-pulse">
+                                        <i class="fas fa-info text-[10px]"></i>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-rose-400 hover:text-rose-300 transition-colors">
+                                        <i class="fas fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 4 -->
+                            <tr class="table-row-hover transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono">2023-10-27 12:40:12</div>
+                                    <div class="text-slate-500 text-[10px] mt-1 uppercase mono">TX-90554-ZA1</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-100">TSLA / USD</div>
+                                    <div class="text-rose-500 font-bold text-xs uppercase"><i class="fas fa-caret-down mr-1"></i>Short / Sell</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono font-medium">210.88</div>
+                                    <div class="text-slate-400 text-xs mono">100 Shares</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[10px] border border-slate-700">MACD-Overlay</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1 bg-slate-800 rounded overflow-hidden">
+                                            <div class="bg-emerald-500 h-full w-[15%]"></div>
+                                        </div>
+                                        <span class="text-[11px] text-emerald-400 mono">0.008%</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 mt-1">Sync Latency: 58ms</div>
+                                </td>
+                                <td class="px-6 py-4 max-w-xs">
+                                    <div class="bg-slate-950/50 p-2 rounded text-[11px] text-slate-400 border border-slate-800 line-clamp-2 italic">
+                                        "Technical indicator crossover on 15m chart. Volume confirmation above 30d moving average."
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-500 hover:text-white transition-colors">
+                                        <i class="fas fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- More rows for visual fullness -->
+                             <tr class="table-row-hover transition-colors group opacity-70">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono">2023-10-27 12:35:44</div>
+                                    <div class="text-slate-500 text-[10px] mt-1 uppercase mono">TX-90512-XC9</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-100">SOL / USDT</div>
+                                    <div class="text-emerald-500 font-bold text-xs uppercase"><i class="fas fa-caret-up mr-1"></i>Long / Buy</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-slate-200 mono font-medium">32.45</div>
+                                    <div class="text-slate-400 text-xs mono">500.00 SOL</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[10px] border border-slate-700">Grid-Scalp-A</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1 bg-slate-800 rounded overflow-hidden">
+                                            <div class="bg-emerald-500 h-full w-[5%]"></div>
+                                        </div>
+                                        <span class="text-[11px] text-emerald-400 mono">0.002%</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 mt-1">Sync Latency: 31ms</div>
+                                </td>
+                                <td class="px-6 py-4 max-w-xs">
+                                    <div class="bg-slate-950/50 p-2 rounded text-[11px] text-slate-400 border border-slate-800 line-clamp-2 italic">
+                                        "Buy grid level 4 hit. Liquidity provider depth confirmed for order size."
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-500 hover:text-white transition-colors">
+                                        <i class="fas fa-magnifying-glass-chart"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-6 py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+                    <span class="text-xs text-slate-500">Showing 1 to 10 of 1,240 trades</span>
+                    <div class="flex items-center gap-2">
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-sky-500/20 text-sky-400 text-xs font-bold border border-sky-500/50">1</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 text-xs transition-colors">2</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 text-xs transition-colors">3</button>
+                        <span class="text-slate-600 px-1">...</span>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 text-xs transition-colors">124</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-panel rounded-2xl p-6 border-slate-800">
+                    <h4 class="text-sm font-semibold mb-4 flex items-center gap-2 text-slate-300">
+                        <i class="fas fa-history text-sky-400"></i> 最近 5 次同步校正行為
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800/50">
+                            <div>
+                                <p class="text-xs font-bold text-slate-200">Price Adjustment: BTC-USDT</p>
+                                <p class="text-[10px] text-slate-500">Offset: -0.15 USDT to match Binance depth</p>
+                            </div>
+                            <span class="text-[10px] mono text-slate-400">0.4s ago</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800/50">
+                            <div>
+                                <p class="text-xs font-bold text-slate-200">Execution Delay Compensation</p>
+                                <p class="text-[10px] text-slate-500">Order #90554 recalculated due to API lag</p>
+                            </div>
+                            <span class="text-[10px] mono text-slate-400">1.2m ago</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel rounded-2xl p-6 border-slate-800">
+                    <h4 class="text-sm font-semibold mb-4 flex items-center gap-2 text-slate-300">
+                        <i class="fas fa-brain text-purple-400"></i> AI 審計系統狀態
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-tighter">Decision Logic Consistency</span>
+                                    <span class="text-[10px] text-emerald-400 font-bold">98.2%</span>
+                                </div>
+                                <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500 w-[98.2%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-tighter">Audit Coverage (Global)</span>
+                                    <span class="text-[10px] text-sky-400 font-bold">100%</span>
+                                </div>
+                                <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-sky-500 w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 italic mt-2">
+                            * Note: The AI Auditor runs 50ms post-trade to verify execution aligns with pre-trade decision metrics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Audit Details Sidebar (Hidden by default, for interaction demo) -->
+    <div id="auditSidebar" class="fixed inset-y-0 right-0 w-96 bg-slate-900 border-l border-slate-800 transform translate-x-full transition-transform duration-300 shadow-2xl z-50">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-lg font-bold">交易深層審計</h2>
+                <button onclick="document.getElementById('auditSidebar').classList.add('translate-x-full')" class="text-slate-500 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-6">
+                <section>
+                    <h3 class="text-xs font-bold text-sky-400 uppercase mb-3">原始信號摘要</h3>
+                    <div class="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-slate-500 text-xs">Signal Source</span>
+                            <span class="text-slate-200 text-xs font-bold">Model_Llama3_Fin_V4</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-slate-500 text-xs">Trigger Condition</span>
+                            <span class="text-slate-200 text-xs font-bold">RSI Divergence + Vol Profile</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 text-xs">AI Confidence Score</span>
+                            <span class="text-emerald-400 text-xs font-bold">92.4%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-xs font-bold text-sky-400 uppercase mb-3">執行路徑 (Hops)</h3>
+                    <div class="space-y-3 pl-2 border-l border-slate-700">
+                        <div class="relative">
+                            <div class="absolute -left-[13px] top-1 w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <p class="text-[11px] text-slate-400">14:22:05.001 - Signal Generated</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[13px] top-1 w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <p class="text-[11px] text-slate-400">14:22:05.012 - Order Validated by Risk Mgmt</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[13px] top-1 w-2 h-2 rounded-full bg-sky-500"></div>
+                            <p class="text-[11px] text-slate-200">14:22:05.043 - Partially Filled (Exchange A)</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[13px] top-1 w-2 h-2 rounded-full bg-sky-500"></div>
+                            <p class="text-[11px] text-slate-200">14:22:05.045 - Fully Filled (Exchange A)</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3 class="text-xs font-bold text-sky-400 uppercase mb-3">滑點與深度分析</h3>
+                    <img src="https://picsum.photos/seed/depth/300/150" class="w-full rounded-lg border border-slate-700 grayscale hover:grayscale-0 transition-all cursor-pointer" alt="Orderbook Depth">
+                    <p class="text-[10px] text-slate-500 mt-2 text-center italic">Snapshot of L2 Orderbook at execution time.</p>
+                </section>
+            </div>
+            
+            <button class="w-full py-3 mt-6 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-file-pdf"></i>
+                下載審計報告 (PDF)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Simple Interaction logic for prototype
+        document.querySelectorAll('[data-goto]').forEach(element => {
+            element.addEventListener('click', () => {
+                const targetId = element.getAttribute('data-goto');
+                console.log(`Navigating to ${targetId}`);
+                // In a real environment, this would handle routing
+                // For this single-file prototype, we just visual feedback or alert
+            });
+        });
+
+        // Toggle the audit sidebar for demo
+        document.querySelectorAll('.fa-magnifying-glass-chart').forEach(btn => {
+            btn.parentElement.addEventListener('click', () => {
+                document.getElementById('auditSidebar').classList.remove('translate-x-full');
+            });
+        });
+    </script>
+
+
+<script>
+  // Pro Prototype - Static Navigation Shim
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-goto]');
+      if (target) {
+        e.preventDefault();
+        const pageId = target.getAttribute('data-goto');
+        // Navigate to the corresponding HTML file
+        window.location.href = pageId + '.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>
+```
