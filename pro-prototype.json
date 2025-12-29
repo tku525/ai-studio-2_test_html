@@ -1,7 +1,7 @@
 {
   "version": 1,
   "topic": "使用繁體中文字體\n一、 系統核心架構 (System Infrastructure)\n1. 安全性規範 (Security)：\n    * 帳號、密碼、憑證路徑、憑證密碼、API Keys 絕對禁止寫死在程式碼中。\n二、 數據管理中心 (QuoteManager 層級)\n1. 多週期數據清洗：同步處理 Tick、1分、5分、15分、日線數據。\n2. 斷線自動補洞：偵測行情中斷，連線後自動向 API 請求缺失的歷史 K 線，確保 AI 分析不中斷。\n3. 自定義因子計算：內建技術指標 (MA, RSI, ATR) 與 AI 提取的特徵因子。\n三、 策略開發與編譯 (PowerLanguage 層級)\n1. Web 動態編譯 (Hot-Reload)：在 Web 介面設有代碼編輯區，修改 Python 策略後點選「編譯」，系統不需重啟即可在記憶體中更新邏輯，實時套用於實盤。\n2. 插件式架構：支援「一鍵增加新策略」。您可以隨時擴充第四個、第五個模式。\n四、 三大 AI 獨立模式與部位加總 (Portfolio Trader 層級)\n1. 模式 A/B/C 獨立開關：每個模式具備獨立的權益曲線計算、進出場訊號。\n2. 部位加總器 (Aggregator)：計算三個模式的期望總口數，與 unitradeAPI 實盤自動對齊。\n3. 部位同步 (Position Auto-Sync)：每分鐘校對實盤倉位，發現誤差自動下校正單（對標 MC 的自動部位調整）。\n五、 深度回測與分析系統 (Backtesting & Analysis)\n1. 高擬真回測引擎：\n    * 精細成本設定：每筆回測必須扣除手續費、期交稅。\n    * 滑點模擬 (Slippage)：可設定每個 Tick 的滑點損失，真實還原交易現場。\n2. 績效報告表：產出包含 勝率、獲利因子、最大回撤 (MDD)、連虧次數、夏普比率 的專業報表。\n3. 回測視覺化：在 Web 介面顯示回測後的資金曲線圖。\n六、 最佳化引擎 (Optimization 層級)\n1. 遺傳演算法 (Genetic Algorithm)：由 AI (Gemini) 執行參數尋優，自動找出過去 30 天內表現最好的參數組合（如 MA 長度、止損點數）。\n2. 樣本外測試 (Walk-Forward)：自動分割數據，確保找到的參數在未來是有用的，而非過度擬合。\n七、 AI 決策流水線 (AI Decision Pipeline)\n* 分析頻率：每 5 分鐘 觸發一次（由 Llama-405B 總指揮）。\n* 五階段分工：\n    * Groq (快看行情) ➔ GPT-4o (新聞情緒) ➔ Gemini (回測與風控分析) ➔ Llama-405B (最終決策下單)。\n八、 Web 介面與自動化部署 (Ops & UI)\n1. 全功能控制台：包含 模式開關、策略編輯器、回測啟動鈕、績效報表、成交日誌。\n",
-  "createdAt": "2025-12-29T14:05:46.202Z",
+  "createdAt": "2025-12-29T14:37:38.374Z",
   "pages": [
     {
       "id": "p1",
@@ -10,8 +10,16 @@
       "status": "completed",
       "suggestedNavigation": [
         "p1",
-        "p2"
-      ]
+        "p2",
+        "p3",
+        "p4",
+        "p5",
+        "p9"
+      ],
+      "position": {
+        "x": 100,
+        "y": 400
+      }
     },
     {
       "id": "p2",
